@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Advanced Menu UI v4 (Performance Focus)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-glow: #00f2ea;
+      --secondary-glow: #7dff7d;
+      --danger-glow: #ff4444;
+      --bg-dark: #0a0a0f;
+      --bg-surface: rgba(20, 22, 36, 0.6);
+      --bg-surface-hover: rgba(30, 32, 46, 0.7);
+      --border-color: rgba(100, 255, 255, 0.15);
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --font-family: 'Poppins', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-image: radial-gradient(
+        circle at var(--cursor-x, 50%) var(--cursor-y, 50%),
+        rgba(0, 242, 234, 0.15), rgba(0, 0, 0, 0) 30%
+      ), radial-gradient(
+        circle at calc(100% - var(--cursor-x, 50%)) calc(100% - var(--cursor-y, 50%)),
+        rgba(125, 255, 125, 0.1), rgba(0, 0, 0, 0) 40%
+      );
+    }
+    
+    .main-container { position: relative; width: 100%; max-width: 550px; }
+
+    .login-box, .menu-box {
+      background: var(--bg-surface);
+      padding: 25px 30px;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      width: 100%;
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    }
+
+    .menu-box { position: absolute; top: 0; left: 0; opacity: 0; transform: scale(1.05); pointer-events: none; }
+    .main-container.logged-in .login-box { opacity: 0; transform: scale(0.95); pointer-events: none; }
+    .main-container.logged-in .menu-box { opacity: 1; transform: scale(1); pointer-events: auto; transition-delay: 0.2s; }
+
+    h2 { text-align: center; margin-bottom: 25px; color: var(--primary-glow); font-weight: 600; text-shadow: 0 0 10px var(--primary-glow); }
+
+    input[type=text], input[type=password], select {
+      width: 100%; padding: 14px 18px; margin: 10px 0; border: 1px solid transparent; border-radius: 10px; background: rgba(0, 0, 0, 0.25); color: var(--text-primary); font-size: 16px; font-family: var(--font-family); transition: all 0.3s ease; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    input[type=text]:focus, input[type=password]:focus, select:focus {
+      outline: none; background: rgba(0, 0, 0, 0.3); border-color: var(--primary-glow); box-shadow: 0 0 15px rgba(0, 242, 234, 0.3), inset 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    /* ----- NÚT BẤM SIÊU NHẸ - TẬP TRUNG VÀO ĐỘ MƯỢT ----- */
+    button {
+      padding: 14px 24px; margin: 8px 4px; border: 1px solid var(--border-color); border-radius: 10px;
+      background-color: rgba(255, 255, 255, 0.05); /* Dùng màu nền đơn giản */
+      color: var(--text-primary); cursor: pointer; font-size: 16px; font-weight: 600; font-family: var(--font-family);
+      
+      /* Chỉ chuyển động transform và background-color, cực kỳ nhẹ */
+      transition: transform 0.2s ease, background-color 0.2s ease;
+      will-change: transform; /* Báo cho trình duyệt tối ưu */
+    }
+
+    button:hover {
+      background-color: rgba(255, 255, 255, 0.15); /* Thay đổi màu nền nhẹ nhàng */
+      transform: translateY(-2px); /* Di chuyển lên trên */
+      color: var(--primary-glow);
+    }
+
+    button:active {
+      transform: translateY(0px) scale(0.97);
+      transition-duration: 0.1s;
+    }
+    
+    .login-box button.btn-login {
+      width: 100%; background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow)); color: #000; border: none; font-size: 18px; animation: pulse-glow 2.5s infinite;
+    }
+    
+    @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 20px rgba(0, 242, 234, 0.4); }
+        50% { box-shadow: 0 0 35px rgba(125, 255, 125, 0.6); }
+    }
+    
+    button.btn-danger { background: linear-gradient(135deg, #ff5555, var(--danger-glow)); color: #fff; }
+
+    /* ----- TABS ----- */
+    .tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
+    .tabs button { flex: 1; background-color: transparent; margin: 0; padding: 12px; font-size: 15px; font-weight: 500; border: none; border-bottom: 2px solid transparent; border-radius: 8px 8px 0 0; }
+    .tabs button:hover { transform: none; color: var(--primary-glow); background-color: rgba(0, 242, 234, 0.1); }
+    .tabs button.active { color: var(--primary-glow); font-weight: 600; border-bottom-color: var(--primary-glow); background: linear-gradient(to top, rgba(0, 242, 234, 0.1), transparent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: tabFadeIn 0.5s ease; }
+    @keyframes tabFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .section { margin-bottom: 25px; }
+    .section h3 { margin: 15px 0 10px; color: var(--secondary-glow); font-size: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; font-weight: 500; }
+    .toggle-item { display: flex; align-items: center; margin: 15px 0; padding: 12px 18px; border-radius: 12px; background: var(--bg-surface-hover); transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1); cursor: pointer; border: 1px solid transparent; }
+    .toggle-item:hover { transform: scale(1.03); background: rgba(40, 42, 56, 0.8); border-color: var(--border-color); }
+    .toggle-item.active { border-color: var(--secondary-glow); box-shadow: 0 0 20px rgba(125, 255, 125, 0.2); }
+    .toggle-item.risk.active { border-color: var(--danger-glow); box-shadow: 0 0 20px rgba(255, 68, 68, 0.2); }
+    .toggle-switch { position: relative; width: 56px; height: 30px; background: rgba(0, 0, 0, 0.3); border-radius: 15px; margin-right: 18px; transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1); box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5); flex-shrink: 0; }
+    .toggle-circle { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; background: linear-gradient(145deg, #e0e0e0, #ffffff); border-radius: 50%; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3); }
+    .toggle-switch.active { background: var(--secondary-glow); box-shadow: 0 0 15px var(--secondary-glow); }
+    .toggle-switch.active .toggle-circle { transform: translateX(26px); background: #fff; }
+    .toggle-item.risk .toggle-switch.active { background: var(--danger-glow); box-shadow: 0 0 15px var(--danger-glow); }
+    .toggle-label { font-size: 16px; font-weight: 500; transition: all 0.4s ease; user-select: none; }
+    .toggle-item.active .toggle-label { color: var(--secondary-glow); font-weight: 600; text-shadow: 0 0 8px var(--secondary-glow); }
+    .toggle-item.risk.active .toggle-label { color: var(--danger-glow); text-shadow: 0 0 8px var(--danger-glow); }
+    .range-container { display: flex; align-items: center; margin: 15px 0; padding: 10px 15px; background: rgba(0,0,0,0.2); border-radius: 10px; }
+    .range-label { font-size: 15px; margin-right: 15px; min-width: 60px; font-weight: 500; color: var(--text-secondary); }
+    .range-value { font-weight: bold; color: var(--primary-glow); font-size: 16px; min-width: 50px; margin-left: 15px; }
+    input[type=range] { -webkit-appearance: none; width: 100%; height: 6px; background: linear-gradient(90deg, var(--primary-glow) 0%, var(--secondary-glow) 100%); outline: none; border-radius: 3px; cursor: pointer; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; background: #fff; border-radius: 50%; transition: all 0.3s ease; box-shadow: 0 0 0 4px var(--bg-dark), 0 0 0 6px var(--primary-glow); }
+    input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.2); box-shadow: 0 0 0 4px var(--bg-dark), 0 0 0 8px var(--primary-glow); }
+    .select-container { margin: 15px 0; }
+    .select-container label { display: block; margin-bottom: 8px; font-size: 15px; color: var(--text-secondary); font-weight: 500; }
+    .status { margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px; text-align: center; line-height: 1.8; }
+  </style>
+</head>
+<body>
+
+<div class="main-container" id="mainContainer">
+    <div class="login-box" id="loginBox">
+      <h2>Login</h2>
+      <input type="text" id="username" placeholder="Username">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="login()" class="btn-login">LOGIN</button>
+      <p id="loginMsg" style="color:red; text-align:center; margin-top:15px;"></p>
+    </div>
+
+    <div class="menu-box" id="menuBox">
+      <h2>MENU KtienXios X BQUYET</h2>
+      
+      <div class="tabs">
+        <button class="tablink active" onclick="openTab(event, 'Aim')">Aim</button>
+        <button class="tablink" onclick="openTab(event, 'ESP')">ESP</button>
+        <button class="tablink" onclick="openTab(event, 'Item')">Item</button>
+        <button class="tablink" onclick="openTab(event, 'Information')">Information</button>
+      </div>
+
+      <div id="Aim" class="tab-content active">
+        <div class="section">
+          <button>Get FF</button>
+          <button>Patch AntiCheat</button>
+        </div>
+        <div class="section">
+          <h3>Aimbot Settings</h3>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Aimbot</div>
+          </div>
+          <div class="toggle-item risk" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Aimlock Enable (Risk)</div>
+          </div>
+          <div class="toggle-item risk" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Super Man (Risk)</div>
+          </div>
+        </div>
+        <div class="section">
+          <h3>MouseAimbot Settings (Sniper)</h3>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">MouseAimbot Enable</div>
+          </div>
+          <div class="select-container">
+            <label>Button Fire:</label>
+            <select>
+              <option>Left Click</option>
+              <option>Right Click</option>
+            </select>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Teleport & Pull Options</h3>
+          <div class="select-container">
+            <label>Freeze:</label>
+            <select>
+              <option>Off</option>
+              <option>On</option>
+            </select>
+          </div>
+          <div class="range-container">
+            <div class="range-label">Range:</div>
+            <input type="range" min="0" max="20" value="12" id="rangeSlider" oninput="updateRangeValue(this)">
+            <div class="range-value" id="rangeValue">12 m</div>
+          </div>
+          <div style="margin-top: 15px;">
+            <button>Teleport</button>
+            <button>Pull Player</button>
+            <button>FakeLag</button>
+          </div>
+        </div>
+        <div class="section">
+          <h3>Recording Options</h3>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Stream Mode</div>
+          </div>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Hide Text</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ESP" class="tab-content">
+        <div class="section">
+          <h3>ESP Options</h3>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Show Players</div>
+          </div>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Show Items</div>
+          </div>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Show Distance</div>
+          </div>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Show Health</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="Item" class="tab-content">
+        <div class="section">
+          <h3>Item Settings</h3>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Auto Pickup</div>
+          </div>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Highlight Rare</div>
+          </div>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Show Item Names</div>
+          </div>
+          <div class="toggle-item" onclick="toggleActive(this)">
+            <div class="toggle-switch"><div class="toggle-circle"></div></div>
+            <div class="toggle-label">Filter Junk Items</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="Information" class="tab-content">
+        <div class="section">
+          <h3>Information</h3>
+          <div class="status">
+            <p>Logged in as <span id="userStatus" style="color: var(--secondary-glow); font-weight: bold;"></span></p>
+            <p>Status: <span style="color: var(--secondary-glow);">Active</span></p>
+            <p>Version: 1.0.0</p>
+          </div>
+          <button onclick="logout()" class="btn-danger" style="margin-top: 20px; width: 100%;">LOGOUT</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+<script>
+    const mainContainer = document.getElementById('mainContainer');
+    const userStatus = document.getElementById('userStatus');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginMsg = document.getElementById('loginMsg');
+    const users = { "ktienxios": "123", "bquyet": "bquyet123" };
+    function login() {
+        const u = usernameInput.value; const p = passwordInput.value;
+        if (users[u] && users[u] === p) {
+            userStatus.innerText = u; mainContainer.classList.add('logged-in'); loginMsg.innerText = "";
+        } else {
+            loginMsg.innerText = "Sai username hoặc password!"; mainContainer.style.animation = 'shake 0.5s';
+            setTimeout(() => mainContainer.style.animation = '', 500);
+        }
+    }
+    function logout() {
+        mainContainer.classList.remove('logged-in');
+        setTimeout(() => { usernameInput.value = ""; passwordInput.value = ""; loginMsg.innerText = ""; }, 500);
+    }
+    passwordInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') { login(); } });
+    usernameInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') { login(); } });
+    const style = document.createElement('style');
+    style.innerHTML = `@keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); } 20%, 40%, 60%, 80% { transform: translateX(8px); } }`;
+    document.head.appendChild(style);
+    function openTab(evt, tabName) {
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+        document.getElementById(tabName).classList.add("active");
+        document.querySelectorAll(".tablink").forEach(t => t.classList.remove("active"));
+        evt.currentTarget.classList.add("active");
+    }
+    function toggleActive(item) {
+        item.classList.toggle('active');
+        item.querySelector('.toggle-switch').classList.toggle('active');
+        if (navigator.vibrate) { navigator.vibrate(20); }
+    }
+    function updateRangeValue(slider) {
+        document.getElementById('rangeValue').textContent = slider.value + ' m';
+        const percentage = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+        slider.style.background = `linear-gradient(to right, var(--primary-glow), var(--secondary-glow) ${percentage}%, rgba(0,0,0,0.3) ${percentage}%)`;
+    }
+    document.addEventListener('mousemove', e => {
+        document.documentElement.style.setProperty('--cursor-x', e.clientX + 'px');
+        document.documentElement.style.setProperty('--cursor-y', e.clientY + 'px');
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        updateRangeValue(document.getElementById('rangeSlider'));
+    });
+</script>
+
+</body>
+</html>
